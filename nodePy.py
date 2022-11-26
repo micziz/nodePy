@@ -12,11 +12,12 @@
 # Remove to remove js file if we compile
 from os import system, remove, getcwd
 # Subprocces to run node and get the result
-from subprocess import run, PIPE
+from subprocess import run, PIPE, CalledProcessError
 # Pathlib for path manipulation stuff
 from pathlib import PurePath
 # Argv for arguments
 from sys import argv
+from shutil import which
 
 def getFileWithNoExt(file):
     purePathFile = PurePath(file)
@@ -25,6 +26,9 @@ def getFileWithNoExt(file):
 def getFileExt(file):
     purePathFile = PurePath(file)
     return purePathFile.suffix
+
+def exists(tool):
+    return which(tool) is not None
 
 def isTs(Ext):
     if '.ts' in Ext:
@@ -62,6 +66,21 @@ def isDeno():
     except:
         pass
             
+def notInstalledError(name, link):
+    return f"{name} is not installed. Install it at {link}"
+
+
+def runTsc(file, fileNoExt):
+    tscCommandToRun = ['tsc', file, '--target', 'es6', '--outfile', f'{fileNoExt}.js']
+    run(tscCommandToRun, check=True)
+
+def runCommand(command):
+    result = run(command, stdout=PIPE, check=True).stdout.decode('utf-8')
+    return result
+
+def nodeCommand(fileNoExt):
+    return ['node', f'{fileNoExt}.js']
+
 
 def runFile(file):
     fileNoExt = getFileWithNoExt(file)
@@ -69,10 +88,31 @@ def runFile(file):
     isTsQ = isTs(ext)
     isDenoQ = isDeno()
     if isDenoQ:
-        result = run(['deno', 'run', file], stdout=PIPE).stdout.decode('utf-8')
+        if exists('deno'):
+            try:
+                result = runCommand(['deno', 'run', file])
+                print(result)
+            except:
+                print('ERROR IN DENO')
+        else:
+            print(notInstalledError('deno', 'https://deno.land'))
     elif isTsQ:
-        system(f'tsc {file} --target es6 --outfile {fileNoExt}.js')
-        result = run(['node', f'{fileNoExt}.js'], stdout=PIPE).stdout.decode('utf-8')
+        if exists('tsc'):
+            try:
+                runTsc(file, fileNoExt)
+            except CalledProcessError:
+                print('ERROR IN THE TYPESCRIPT COMPILER')
+        else:
+            print(notInstalledError('typescript', 'https://typescript-lang.org'))
+        if exists('node'):
+            try:
+                nodeCommandToRun = nodeCommand(fileNoExt)
+                result = runCommand(nodeCommandToRun)
+                print(result)
+            except CalledProcessError:
+                print('ERROR IN NODE')
+        else:
+            print(notInstalledError('node', 'https://nodejs.org'))
         noDel = checkIfNoDeleate()
         if not noDel:
             remove(f'{fileNoExt}.js')
@@ -81,11 +121,13 @@ def runFile(file):
         isCjsQ = isCjs(ext)
         if isMjsQ:
             result = run(['node', file], stdout=PIPE).stdout.decode('utf-8')
+            print(result)
         elif isCjsQ:
             result = run(['node', file], stdout=PIPE).stdout.decode('utf-8')
+            print(result)
         else:
             result = run(['node', file], stdout=PIPE).stdout.decode('utf-8')
-    print(result)
+            print(result)
 
 def cli():
     try:
