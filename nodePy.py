@@ -18,6 +18,37 @@ from pathlib import PurePath
 # Argv for arguments
 from sys import argv
 from shutil import which
+from sys import exit
+
+def help():
+    return """
+usage: python3 nodePy.py [file/--help] (options)
+
+    (stable)
+    --noDel: Doesn't delate the js file after compilation
+    --help: Print this message and quits.
+    Call as the first argument to get general help. Call after another argument to get help about that argument
+
+    (experimental)
+    --deno: Runs the code with deno
+    """
+
+def helpFile():
+    return """
+usage: python3 nodePy.py [file] (options)
+
+Description: Runs a file with nodejs or deno
+Available Options:
+
+    (stable)
+    --noDel: Doesn't delate the js file after compilation
+    --help: Call as the first argument to get general help. Call after another argument to get help about that argument
+
+    (experimental)
+    --deno: Runs the code with deno
+    
+    """
+
 
 def getFileWithNoExt(file):
     purePathFile = PurePath(file)
@@ -32,18 +63,6 @@ def exists(tool):
 
 def isTs(Ext):
     if '.ts' in Ext:
-        return True
-    else:
-        return False
-
-def isMjs(Ext):
-    if '.mjs' in Ext:
-        return True
-    else:
-        return False
-
-def isCjs(Ext):
-    if '.cjs' in Ext:
         return True
     else:
         return False
@@ -83,6 +102,9 @@ def nodeCommand(fileNoExt):
 
 
 def runFile(file):
+    if '--help' in argv:
+        print(helpFile())
+        exit()
     fileNoExt = getFileWithNoExt(file)
     ext = getFileExt(file)
     isTsQ = isTs(ext)
@@ -117,34 +139,24 @@ def runFile(file):
         if not noDel:
             remove(f'{fileNoExt}.js')
     else:
-        isMjsQ = isMjs(ext)
-        isCjsQ = isCjs(ext)
-        if isMjsQ:
-            result = run(['node', file], stdout=PIPE).stdout.decode('utf-8')
-            print(result)
-        elif isCjsQ:
-            result = run(['node', file], stdout=PIPE).stdout.decode('utf-8')
-            print(result)
+        if exists('node'):
+            try:
+                nodeCommandToRun = nodeCommand(fileNoExt)
+                result = runCommand(nodeCommandToRun)
+                print(result)
+            except CalledProcessError:
+                print('ERROR IN NODE')
         else:
-            result = run(['node', file], stdout=PIPE).stdout.decode('utf-8')
-            print(result)
+            print(notInstalledError('node', 'https://nodejs.org')) 
 
 def cli():
     try:
         if argv[1] == '--help':
-            print("""
-usage: nodePy [file] (options)
-
-    --noDel: Don't delate the js file after compilation
-            """)
+            print(help())
         else:
             runFile(f'{getcwd()}/{argv[1]}')
     except IndexError:
-        print("""
-usage: nodePy [file] (options)
-
-    --noDel: Don't delate the js file after compilation
-        """)
+        print(help())
 
 if __name__ == '__main__':
     cli()
