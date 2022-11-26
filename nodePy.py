@@ -15,10 +15,10 @@ from os import system, remove, getcwd
 from subprocess import run, PIPE, CalledProcessError
 # Pathlib for path manipulation stuff
 from pathlib import PurePath
-# Argv for arguments
-from sys import argv
+# Argv for arguments and exit to exit cleanly
+from sys import argv, exit
+# Witch to now if a coomad exist or not
 from shutil import which
-from sys import exit
 
 def help():
     return """
