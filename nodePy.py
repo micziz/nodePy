@@ -17,7 +17,7 @@ from subprocess import run, PIPE, CalledProcessError
 from pathlib import PurePath
 # Argv for arguments and exit to exit cleanly
 from sys import argv, exit
-# Witch to now if a coomad exist or not
+# Witch to now if a command exist or not
 from shutil import which
 
 def help():
@@ -25,12 +25,11 @@ def help():
 usage: python3 nodePy.py [file/--help] (options)
 
     (stable)
-    --noDel: Doesn't delate the js file after compilation
     --help: Print this message and quits.
     Call as the first argument to get general help. Call after another argument to get help about that argument
-
-    (experimental)
+    --noDel: Doesn't delate the js file after compilation
     --deno: Runs the code with deno
+    --write (filename): Writes result to a file, not to stdout
     """
 
 def helpFile():
@@ -67,14 +66,15 @@ def isTs(Ext):
     else:
         return False
 
-def checkIfNoDeleate():
+def checkIfArgIsInArgv(arg):
     try:
-        if argv[2] == '--noDel':
+        if arg in argv:
             return True
         else:
             return False
     except IndexError:
         pass
+ 
 
 def isDeno():
     try:
@@ -84,7 +84,7 @@ def isDeno():
             return False
     except:
         pass
-            
+    
 def notInstalledError(name, link):
     return f"{name} is not installed. Install it at {link}"
 
@@ -113,7 +113,13 @@ def runFile(file):
         if exists('deno'):
             try:
                 result = runCommand(['deno', 'run', file])
-                print(result)
+                writeOrNot = checkIfArgIsInArgv('--write')
+                if writeOrNot:
+                    toWrite = argv.index('--write') + 1
+                    with open(argv[toWrite], 'wt') as f:
+                        f.write(result)
+                else:
+                    print(result)
             except:
                 print('ERROR IN DENO')
         else:
@@ -130,12 +136,18 @@ def runFile(file):
             try:
                 nodeCommandToRun = nodeCommand(fileNoExt)
                 result = runCommand(nodeCommandToRun)
-                print(result)
+                writeOrNot = checkIfArgIsInArgv('--write')
+                if writeOrNot:
+                    toWrite = argv.index('--write') + 1
+                    with open(argv[toWrite], 'wt') as f:
+                        f.write(result)
+                else:
+                    print(result)
             except CalledProcessError:
                 print('ERROR IN NODE')
         else:
             print(notInstalledError('node', 'https://nodejs.org'))
-        noDel = checkIfNoDeleate()
+        noDel = checkIfArgIsInArgv('--noDel')
         if not noDel:
             remove(f'{fileNoExt}.js')
     else:
@@ -143,7 +155,13 @@ def runFile(file):
             try:
                 nodeCommandToRun = nodeCommand(fileNoExt)
                 result = runCommand(nodeCommandToRun)
-                print(result)
+                writeOrNot = checkIfArgIsInArgv('--write')
+                if writeOrNot:
+                    toWrite = argv.index('--write') + 1
+                    with open(argv[toWrite], 'wt') as f:
+                        f.write(result)
+                else:
+                    print(result)
             except CalledProcessError:
                 print('ERROR IN NODE')
         else:
