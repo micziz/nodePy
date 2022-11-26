@@ -101,14 +101,18 @@ def nodeCommand(fileNoExt):
     return ['node', f'{fileNoExt}.js']
 
 
-def runFile(file):
-    if '--help' in argv:
-        print(helpFile())
-        exit()
+def getAllInfo(file, ext):
     fileNoExt = getFileWithNoExt(file)
     ext = getFileExt(file)
     isTsQ = isTs(ext)
     isDenoQ = isDeno()
+    return fileNoExt, ext, isTsQ, isDenoQ
+
+def runFile(file):
+    if '--help' in argv:
+        print(helpFile())
+        exit()
+    fileNoExt, ext, isTsQ, isDenoQ = getAllInfo(file, ext)
     if isDenoQ:
         if exists('deno'):
             try:
