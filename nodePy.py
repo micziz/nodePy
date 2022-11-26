@@ -53,11 +53,24 @@ def checkIfNoDeleate():
     except IndexError:
         pass
 
+def isDeno():
+    try:
+        if argv[2] == "--deno":
+            return True
+        else:
+            return False
+    except:
+        pass
+            
+
 def runFile(file):
     fileNoExt = getFileWithNoExt(file)
     ext = getFileExt(file)
     isTsQ = isTs(ext)
-    if isTsQ:
+    isDenoQ = isDeno()
+    if isDenoQ:
+        result = run(['deno', 'run', file], stdout=PIPE).stdout.decode('utf-8')
+    elif isTsQ:
         system(f'tsc {file} --target es6 --outfile {fileNoExt}.js')
         result = run(['node', f'{fileNoExt}.js'], stdout=PIPE).stdout.decode('utf-8')
         noDel = checkIfNoDeleate()
@@ -67,11 +80,11 @@ def runFile(file):
         isMjsQ = isMjs(ext)
         isCjsQ = isCjs(ext)
         if isMjsQ:
-            result = run(['node', f'{fileNoExt}.mjs'], stdout=PIPE).stdout.decode('utf-8')
+            result = run(['node', file], stdout=PIPE).stdout.decode('utf-8')
         elif isCjsQ:
-            result = run(['node', f'{fileNoExt}.cjs'], stdout=PIPE).stdout.decode('utf-8')
+            result = run(['node', file], stdout=PIPE).stdout.decode('utf-8')
         else:
-            result = run(['node', f'{fileNoExt}.js'], stdout=PIPE).stdout.decode('utf-8')
+            result = run(['node', file], stdout=PIPE).stdout.decode('utf-8')
     print(result)
 
 def cli():
